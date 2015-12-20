@@ -30,6 +30,24 @@ class UnderscorePopulator
       out.write <<-eos
 {
   "metadata" : {
+    "settings" : {
+      "analysis": {
+        "char_filter" : {
+          "no_special" : {
+            "type" : "mapping",
+            "mappings" : ["_=>", ".=>"]
+          }
+        },
+        "analyzer" : {
+          "lower_keyword" : {
+            "type" : "custom",
+            "tokenizer": "keyword",
+            "filter" : ["lowercase"],
+            "char_filter" : ["no_special"]
+          }
+        }
+      }
+    },
     "mapping" : {
       "_all" : {
         "enabled" : false
@@ -37,7 +55,7 @@ class UnderscorePopulator
       "properties" : {
         "name" : {
           "type" : "string",
-          "index" : "analyzed"
+          "analyzer" : "lower_keyword"
         },
         "syntax" : {
           "type" : "string",
@@ -45,7 +63,7 @@ class UnderscorePopulator
         },
         "aliases" : {
           "type" : "string",
-          "index" : "analyzed"
+          "analyzer" : "lower_keyword"
         },
         "descriptionHtml" : {
           "type" : "string",
@@ -54,6 +72,10 @@ class UnderscorePopulator
         "exampleUsage" : {
           "type" : "string",
           "index" : "no"
+        },
+        "suggest" : {
+          "type" : "completion",
+          "analyzer" : "lower_keyword"
         }
       }
     }
@@ -133,7 +155,11 @@ class UnderscorePopulator
           syntax: syntax,
           aliases: aliases,
           descriptionHtml: description_html.strip,
-          exampleUsage: example_usage
+          exampleUsage: example_usage,
+          suggest: {
+            input: [name] + aliases,
+            output: name
+          }
         }
         doc
       else
